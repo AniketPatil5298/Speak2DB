@@ -17,15 +17,27 @@
   "rules": {
     "semi": ["error", "always"],
     "quotes": ["error", "single"],
-    "@typescript-eslint/no-unused-expressions": ["error", {
-    "allowShortCircuit": true,
-    "allowTernary": true,
-    "allowTaggedTemplates": true
-  }]
+    "@typescript-eslint/no-unused-expressions": [
+      "error",
+      {
+        "allowShortCircuit": true,
+        "allowTernary": true,
+        "allowTaggedTemplates": true
+      }
+    ],
+    "no-console": ["warn", "log", { "allow": ["warn", "error"] }]
   },
   "settings": {
     "react": {
       "version": "detect"
     }
-  }
+  },
+   "overrides": [
+    {
+      "files": ["commitlint.config.js"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
 }
