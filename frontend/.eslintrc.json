@@ -25,7 +25,7 @@
         "allowTaggedTemplates": true
       }
     ],
-    "no-console": ["warn", "log", { "allow": ["warn", "error"] }]
+    "no-console": ["log", { "allow": ["warn", "error"] }]
   },
   "settings": {
     "react": {
