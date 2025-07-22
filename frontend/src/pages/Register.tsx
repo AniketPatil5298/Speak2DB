@@ -1,65 +1,168 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import AuthLayout from '../components/AuthLayout';
+import { useRegisterStore } from '../store/useRegisterStore';
+import { registerSchema } from '../validation/registerSchema';
+import axios, { AxiosError } from 'axios';
+import GoogleBtn from '../components/GoogleBtn';
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const { theme } = useTheme();
+  const { firstName, lastName, email, password, confirmPassword, setField, reset } =
+    useRegisterStore();
+  const navigate = useNavigate();
+  const [isFormValid, setIsFormValid] = useState(false);
+  // Re-validate when fields change
+  useEffect(() => {
+    const result = registerSchema.safeParse({
+      firstName,
+      lastName,
+      email,
+      password,
+      confirmPassword,
+    });
+    setIsFormValid(result.success);
+  }, [firstName, lastName, email, password, confirmPassword]);
+
+  const inputClass = `px-4 py-2 border rounded w-full ${
+    theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : ''
+  }`;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const result = registerSchema.safeParse({
+      firstName,
+      lastName,
+      email,
+      password,
+      confirmPassword,
+    });
+
+    if (!result.success) {
+      const errors = result.error.format();
+      console.error('Validation failed:', errors);
+      alert('Please fill out all required fields correctly.');
+      return;
+    }
+
+    const registerData = {
+      firstName: firstName, // ensure keys match your backend schema
+      lastName,
+      email,
+      password,
+      isThirdPartyLogin: false, // default if user registers manually
+    };
+
+    try {
+      const response = await axios.post(
+        `${process.env.REACT_APP_API_URL}${process.env.REACT_APP_API_PATH}/auth/signup`,
+        registerData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (response) {
+        toast.success('User registered successfully!');
+        navigate('/');
+      }
+      reset();
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ message?: string }>;
+      toast.error(axiosError.response?.data?.message || 'Register failed');
+    }
+  };
 
   return (
     <AuthLayout>
       <div
-        className={`p-8 rounded-lg shadow-lg w-full max-w-md ${theme === 'dark' ? 'bg-black-900 text-white border border-white' : 'bg-white text-gray-900'}`}
+        className={`p-8 rounded-lg shadow-lg w-full max-w-md ${
+          theme === 'dark'
+            ? 'bg-black-900 text-white border border-white'
+            : 'bg-white text-gray-900'
+        }`}
       >
         <h2 className="text-2xl font-bold mb-6 text-center">Register</h2>
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           <div className="flex space-x-2">
+            <div className="w-1/2">
+              <label className="block mb-1 text-sm font-medium">
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setField('firstName', e.target.value)}
+                className={inputClass}
+              />
+            </div>
+            <div className="w-1/2">
+              <label className="block mb-1 text-sm font-medium">
+                Last Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setField('lastName', e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">
+              Email <span className="text-red-500">*</span>
+            </label>
             <input
-              type="text"
-              placeholder="First Name"
-              className={`w-1/2 px-4 py-2 border rounded ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : ''}`}
-            />
-            <input
-              type="text"
-              placeholder="Last Name"
-              className={`w-1/2 px-4 py-2 border rounded ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : ''}`}
+              type="email"
+              value={email}
+              onChange={(e) => setField('email', e.target.value)}
+              className={inputClass}
             />
           </div>
-          <input
-            type="email"
-            placeholder="Email"
-            className={`w-full px-4 py-2 border rounded ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : ''}`}
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            className={`w-full px-4 py-2 border rounded ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : ''}`}
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            className={`w-full px-4 py-2 border rounded ${theme === 'dark' ? 'bg-gray-800 text-white border-gray-700' : ''}`}
-          />
+          <div>
+            <label className="block mb-1 text-sm font-medium">
+              Password <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setField('password', e.target.value)}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className="block mb-1 text-sm font-medium">
+              Confirm Password <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setField('confirmPassword', e.target.value)}
+              className={inputClass}
+            />
+          </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+            disabled={!isFormValid}
+            className={`w-full py-2 rounded transition ${
+              isFormValid
+                ? 'bg-blue-600 text-white hover:bg-blue-700'
+                : 'bg-gray-400 text-gray-700 cursor-not-allowed'
+            }`}
           >
             Register
           </button>
         </form>
+
         <div className="my-4 text-center text-gray-500">or</div>
-        <button className="w-full flex items-center justify-center bg-red-500 text-white py-2 rounded hover:bg-red-600 transition">
-          {/* SVG Icon */}
-          <svg className="w-5 h-5 mr-2" viewBox="0 0 48 48">
-            <g>
-              <path fill="#FFC107" d="..." />
-              <path fill="#FF3D00" d="..." />
-              <path fill="#4CAF50" d="..." />
-              <path fill="#1976D2" d="..." />
-            </g>
-          </svg>
-          Continue with Google
-        </button>
+
+        <GoogleBtn />
+
         <p className="mt-4 text-center">
           Already have an account?{' '}
           <Link to="/" className="text-blue-600 hover:underline">

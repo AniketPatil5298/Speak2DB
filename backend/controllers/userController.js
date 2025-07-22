@@ -30,7 +30,7 @@ const loginUser = async (req, res) => {
       // Also send user info in response body
       res.json({
         _id: user._id,
-        firstname: user.firstname,
+        firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         token,
