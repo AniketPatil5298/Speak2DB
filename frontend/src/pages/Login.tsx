@@ -7,6 +7,8 @@ import { loginSchema } from '../validation/loginSchema';
 import GoogleBtn from '../components/GoogleBtn';
 import axios, { AxiosError } from 'axios';
 import { ZodError } from 'zod';
+import { toast } from 'react-toastify';
+import { useUserStore } from '../store/useUserStore';
 
 const Login = () => {
   const { theme } = useTheme();
@@ -31,7 +33,6 @@ const Login = () => {
     }
 
     try {
-      //  const response = await axios.post(
       const response = await axios.post(
         `${process.env.REACT_APP_API_URL}${process.env.REACT_APP_API_PATH}/auth/signin`,
         fields,
@@ -41,16 +42,14 @@ const Login = () => {
           },
         }
       );
-      alert('Logged in successfully!');
+      toast.success('Logged in successfully!');
       reset();
       localStorage.setItem('token', response.data.token);
+      useUserStore.getState().setUser({ ...response.data });
       navigate('/home');
-      // Optionally store token or user data
-      // localStorage.setItem('token', response.data.token);
-      // navigate('/dashboard'); // If using React Router
     } catch (error: unknown) {
       const axiosError = error as AxiosError<{ message?: string }>;
-      alert(axiosError.response?.data?.message || 'Login failed');
+      toast.error(axiosError.response?.data?.message || 'Login failed');
     }
   };
 
@@ -69,6 +68,7 @@ const Login = () => {
             <input
               type="email"
               placeholder="Email"
+              autoComplete="email"
               value={fields.email}
               onChange={(e) => setField('email', e.target.value)}
               className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -81,6 +81,7 @@ const Login = () => {
             <input
               type="password"
               placeholder="Password"
+              autoComplete="password"
               value={fields.password}
               onChange={(e) => setField('password', e.target.value)}
               className={`w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${

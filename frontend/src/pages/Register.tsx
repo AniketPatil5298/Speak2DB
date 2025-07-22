@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../ThemeContext';
 import AuthLayout from '../components/AuthLayout';
 import { useRegisterStore } from '../store/useRegisterStore';
 import { registerSchema } from '../validation/registerSchema';
 import axios, { AxiosError } from 'axios';
 import GoogleBtn from '../components/GoogleBtn';
+import { toast } from 'react-toastify';
 
 const Register = () => {
   const { theme } = useTheme();
   const { firstName, lastName, email, password, confirmPassword, setField, reset } =
     useRegisterStore();
-
+  const navigate = useNavigate();
   const [isFormValid, setIsFormValid] = useState(false);
-  console.log(process.env.REACT_APP_API_URL, process.env.REACT_APP_API_PATH);
   // Re-validate when fields change
   useEffect(() => {
     const result = registerSchema.safeParse({
@@ -67,12 +67,14 @@ const Register = () => {
         }
       );
 
-      console.log('✅ Registration successful:', response.data);
-      alert('Registered successfully!');
-      reset(); // Clear form after successful register
+      if (response) {
+        toast.success('User registered successfully!');
+        navigate('/');
+      }
+      reset();
     } catch (error: unknown) {
       const axiosError = error as AxiosError<{ message?: string }>;
-      alert(axiosError.response?.data?.message || 'Register failed');
+      toast.error(axiosError.response?.data?.message || 'Register failed');
     }
   };
 

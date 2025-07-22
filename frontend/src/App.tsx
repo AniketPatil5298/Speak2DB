@@ -6,11 +6,13 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import { ThemeProvider } from './ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   return (
     <ThemeProvider>
       <Router>
+        <ToastContainer />
         <Navbar />
         <Routes>
           <Route path="/" element={<Login />} />
